@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+artifacts/
+*.log
+*.jsonl
+state.json
+*.sqlite*
+*.lnk
+.env*

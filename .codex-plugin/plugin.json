@@ -1,0 +1,17 @@
+{
+  "name": "codex-token-meter",
+  "version": "0.2.0+codex.20260907120642",
+  "description": "Local Codex token usage floating window. No model calls.",
+  "author": {
+    "name": "Local developer"
+  },
+  "interface": {
+    "displayName": "Codex Token Meter",
+    "shortDescription": "Local token usage with automatic session following.",
+    "longDescription": "Unofficial Windows companion: light/dark themes, native usage snapshots, automatic session following and local autostart. Requires Python 3.9+ with Tkinter. Run Install.cmd; no model calls.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Help me use Codex Token Meter."
+  }
+}
