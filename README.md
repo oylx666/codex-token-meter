@@ -33,12 +33,31 @@ Windows 本地 token 统计浮窗。白色／深灰界面，自动展示最近�
 
 ## 启动与卸载
 
+### 启动、关闭联动开关
+
+浮窗右上角 `···` 菜单提供两个独立选项，默认均开启：
+
+- **随 Codex 打开浮窗**：出现 Codex 桌面窗口时打开浮窗。手动关闭浮窗后不会每次检测都重新弹出。
+- **随 Codex 关闭浮窗**：最后一个 Codex 桌面窗口关闭后，约三至六秒关闭浮窗。最小化不算关闭；即使 Codex 后台进程仍驻留也可以联动关闭。
+
+设置立即保存，监听器每三秒读取。关闭“自动打开”不终止已经显示的窗口；关闭“自动关闭”后浮窗会保留。设置依赖 Install.cmd 安装的监听器，自启动项被禁用时不生效。
+
+也可通过本地命令行接口查看、修改，不涉及 HTTP 或模型调用：
+
+```powershell
+python scripts/settings.py
+python scripts/settings.py --auto-open on --auto-close on
+python scripts/settings.py --auto-open off --auto-close off
+```
+
+设置文件是 `%LOCALAPPDATA%/CodexTokenMeter/lifecycle.json`，与窗口外观状态分开保存。
+
 - Install.cmd：安装自启动；监听器检测 Codex 桌面进程后显示窗口。
 - Start.ps1：仅打开浮窗。
 - Uninstall.cmd：移除启动项，停止监听器并关闭浮窗，保留源码和窗口偏好。
 - Disable-Autostart.ps1：仅取消自动启动，默认保留已打开的浮窗。
 
-启动项名为 `Codex Token Meter Watcher.lnk`，位于 Windows 当前用户 Startup 目录。Codex 进程彻底结束后约三至六秒关闭浮窗；监听器继续等待下一次启动。卸载 Codex 插件本身不会移除这个外部启动项，需先运行 Uninstall.cmd。
+启动项名为 `Codex Token Meter Watcher.lnk`，位于 Windows 当前用户 Startup 目录。关闭浮窗后监听器继续等待下一次启动。卸载 Codex 插件本身不会移除这个外部启动项，需先运行 Uninstall.cmd。
 
 ## 开发与验证
 

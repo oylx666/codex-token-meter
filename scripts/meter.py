@@ -12,6 +12,7 @@ import tkinter.font as tkfont
 from common import CODEX_DIR, STATE_DIR, marker, read_state, save_state
 from collector import Collector
 from usage import UsageReader, metrics
+from settings import read_settings, write_settings
 
 THEMES = {
     '浅色': dict(bg='#ffffff', surface='#f5f5f5', text='#202020', muted='#707070', line='#e6e6e6', accent='#16805d', warning='#9b5b10'),
@@ -55,6 +56,9 @@ class Meter:
             self.path = None
         self.auto = tk.BooleanVar(value=False if path else self.state.get('auto') is not False)
         self.top = tk.BooleanVar(value=self.state.get('topmost') is True)
+        lifecycle=read_settings()
+        self.auto_open = tk.BooleanVar(value=lifecycle['auto_open'])
+        self.auto_close = tk.BooleanVar(value=lifecycle['auto_close'])
         self.scope = tk.StringVar(value='任务累计')
         theme = self.state.get('theme', '浅色')
         self.theme = tk.StringVar(value=theme if theme in THEMES else '浅色')
@@ -147,9 +151,15 @@ class Meter:
         self.save()
 
     def menu(self):
+        lifecycle=read_settings()
+        self.auto_open.set(lifecycle['auto_open'])
+        self.auto_close.set(lifecycle['auto_close'])
         menu = tk.Menu(self.root, tearoff=False)
         menu.add_checkbutton(label='自动跟随最近更新的会话', variable=self.auto, command=self.mode)
         menu.add_checkbutton(label='窗口置顶', variable=self.top, command=self.pin)
+        menu.add_separator()
+        menu.add_checkbutton(label='随 Codex 打开浮窗', variable=self.auto_open, command=self.lifecycle_settings)
+        menu.add_checkbutton(label='随 Codex 关闭浮窗', variable=self.auto_close, command=self.lifecycle_settings)
         menu.add_separator()
         for theme in THEMES:
             menu.add_radiobutton(label=theme + '外观', variable=self.theme, value=theme, command=self.change_theme)
@@ -158,6 +168,13 @@ class Meter:
         menu.add_command(label='打开会话文件…', command=self.open_file)
         menu.add_command(label='打开使用说明', command=self.help)
         menu.tk_popup(self.root.winfo_pointerx(), self.root.winfo_pointery())
+
+    def lifecycle_settings(self):
+        try:
+            write_settings(auto_open=self.auto_open.get(),auto_close=self.auto_close.get())
+            self.status.configure(text='联动设置已保存，监听器将在 3 秒内读取')
+        except OSError:
+            self.status.configure(text='联动设置保存失败，请检查本地目录权限')
 
     def scope_menu(self):
         menu = tk.Menu(self.root, tearoff=False)

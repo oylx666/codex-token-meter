@@ -56,6 +56,16 @@ def run():
             assert number(999999)=='999,999'
             assert number(10**12)=='1.00T'
             assert not errors, errors
+            from watcher import desktop_window_count
+            assert desktop_window_count([os.getpid()]) == 1
+            root.iconify()
+            pump()
+            assert desktop_window_count([os.getpid()]) == 1, 'Minimize must not count as closed'
+            root.withdraw()
+            pump()
+            assert desktop_window_count([os.getpid()]) == 0, 'No desktop window must count as closed'
+            root.deiconify()
+            pump()
             print('UI PASS: both themes, long title, huge counts, 3 font scales, singleton picker, exact copy')
         finally:
             root.clipboard_clear()

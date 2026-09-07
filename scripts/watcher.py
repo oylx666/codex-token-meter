@@ -9,6 +9,30 @@ import sys
 import time
 
 from common import STATE_DIR, marker, signal
+from settings import read_settings
+
+
+def desktop_window_count(pids):
+    """Visible top-level windows count; minimized windows remain visible to Win32."""
+    if not pids:
+        return 0
+    user = ctypes.WinDLL('user32', use_last_error=True)
+    callback_type = ctypes.WINFUNCTYPE(w.BOOL, w.HWND, w.LPARAM)
+    user.EnumWindows.argtypes = [callback_type, w.LPARAM]
+    user.IsWindowVisible.argtypes = [w.HWND]
+    user.GetWindowTextLengthW.argtypes = [w.HWND]
+    user.GetWindowThreadProcessId.argtypes = [w.HWND, ctypes.POINTER(w.DWORD)]
+    matches=[]
+    @callback_type
+    def visit(hwnd, _):
+        pid=w.DWORD()
+        user.GetWindowThreadProcessId(hwnd,ctypes.byref(pid))
+        if pid.value in pids and user.IsWindowVisible(hwnd) and user.GetWindowTextLengthW(hwnd)>0:
+            matches.append(hwnd)
+        return True
+    if not user.EnumWindows(visit,0):
+        raise ctypes.WinError(ctypes.get_last_error())
+    return len(matches)
 
 
 def is_codex_desktop(path):
@@ -62,18 +86,23 @@ class Lifecycle:
     def __init__(self):
         self.present = False
         self.absent_checks = 0
+        self.previous_auto_open = False
 
-    def update(self, present):
+    def update(self, present, auto_open=True, auto_close=True):
+        enabled_now = auto_open and not self.previous_auto_open
+        self.previous_auto_open = auto_open
         if present:
             self.absent_checks = 0
             if not self.present:
                 self.present = True
+                return 'start' if auto_open else None
+            if enabled_now:
                 return 'start'
         elif self.present:
             self.absent_checks += 1
             if self.absent_checks >= 2:
                 self.present = False
-                return 'stop'
+                return 'stop' if auto_close else None
         return None
 
 
@@ -83,7 +112,8 @@ def request_meter_close():
 
 def main():
     if '--probe' in sys.argv:
-        print(json.dumps(dict(codex_desktop_pids=codex_desktop_pids())))
+        pids=codex_desktop_pids()
+        print(json.dumps(dict(codex_desktop_pids=pids,desktop_windows=desktop_window_count(pids),settings=read_settings())))
         return
     from singleton import acquire
     STATE_DIR.mkdir(parents=True, exist_ok=True)
@@ -100,7 +130,8 @@ def main():
             break
         action = None
         try:
-            action = lifecycle.update(bool(codex_desktop_pids()))
+            settings=read_settings()
+            action = lifecycle.update(bool(desktop_window_count(codex_desktop_pids())), **settings)
             if action == 'start':
                 subprocess.Popen([str(windowless), str(Path(__file__).with_name('meter.py'))], creationflags=subprocess.CREATE_NO_WINDOW)
             elif action == 'stop':
