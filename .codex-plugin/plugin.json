@@ -1,6 +1,6 @@
 {
   "name": "codex-token-meter",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Local Codex token usage floating window. No model calls.",
   "author": {
     "name": "Local developer"

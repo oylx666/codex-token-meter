@@ -21,13 +21,13 @@ This installs the local display and startup components. It does **not** automati
 ## Usage
 
 - While idle, the meter keeps showing the latest session's cumulative usage. It switches when another session file becomes the most recently updated. This follows file activity, **not the foreground Codex page**.
-- `任务累计` selects cumulative session usage; `最近一次调用` selects the most recent model call, which is not necessarily a complete user turn.
-- `任务` opens the searchable task list. Double-click a task to pin it, or restore automatic following from the list.
+- `Session total` selects cumulative session usage; `Last call` selects the most recent model call, which is not necessarily a complete user turn.
+- `Tasks` opens the searchable task list. Double-click a task to pin it, or restore automatic following from the list.
 - The `···` menu contains always-on-top, light/dark appearance, exact-value copying, lifecycle switches, and advanced file selection. **Ctrl+C** copies statistics; **Ctrl+L** opens the task list.
 - Large counts use M/B/T and larger units; copied values retain their exact integers. Missing values show a dash, and read failures are labeled as stale data.
 - Closing the meter manually does not cause it to pop up repeatedly during the same Codex session. Run `Start.ps1` to reopen it manually, or restart Codex.
 
-The application UI currently uses Chinese labels. This English README explains them; it does not imply an English UI translation.
+English is the default UI language. Choose **··· → Language → 简体中文** to switch to Simplified Chinese, or **··· → 语言 → English** to switch back. Changes apply immediately and persist across restarts. Menus, status messages, errors, and task picker labels follow the selected language; task titles and numeric data are unchanged. The user guide opens in the selected language. Native file dialog controls follow Windows language settings.
 
 ## Open/close integration
 
@@ -35,8 +35,8 @@ Two independent options in `···` are enabled by default:
 
 | UI option | Behavior |
 | --- | --- |
-| 随 Codex 打开浮窗 | Open the meter when a Codex desktop window appears. |
-| 随 Codex 关闭浮窗 | Close the meter roughly 3–6 seconds after the last Codex desktop window closes, even if background processes remain. Minimizing does not count as closing. |
+| Open with Codex | Open the meter when a Codex desktop window appears. |
+| Close with Codex | Close the meter roughly 3–6 seconds after the last Codex desktop window closes, even if background processes remain. Minimizing does not count as closing. |
 
 Settings are saved immediately and read by the watcher every three seconds. Disabling automatic opening does not close an existing meter; disabling automatic closing leaves it open. Enabling automatic closing after Codex has already closed also closes the meter. A newly started watcher cleans up an orphan meter after two absent-window checks. One transient missing-window check does not trigger closure.
 
@@ -58,7 +58,7 @@ The application reads the current user's `$CODEX_HOME/sessions` (default: `~/.co
 
 A background thread scans for sessions every three seconds and checks the selected file for new records every half-second. History is read in faster bounded chunks. Actual freshness depends on when Codex reports and writes usage. Reads are limited to 1 MiB per chunk and buffered records to 4 MiB. Skipped oversized records produce a warning until a valid usage event arrives.
 
-Local state under `%LOCALAPPDATA%/CodexTokenMeter` includes window geometry, theme, and the selected session path. Running the meter consumes no model tokens. Developing it or asking Codex to operate or diagnose it still consumes normal conversation usage.
+Local state under `%LOCALAPPDATA%/CodexTokenMeter` includes window geometry, theme, language, and the selected session path. Running the meter consumes no model tokens. Developing it or asking Codex to operate or diagnose it still consumes normal conversation usage.
 
 ## Startup and removal
 

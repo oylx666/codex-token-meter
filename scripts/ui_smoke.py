@@ -34,13 +34,41 @@ def run():
         try:
             pump(1.2)
             assert app.current_metrics()['input']==2**60
-            for scaling in (1.0,1.5,2.0):
+            assert app.language.get() == 'en', 'Fresh installation must default to English'
+            from common import read_state
+            for language in ('zh-CN', 'en'):
+                app.language.set(language)
+                app.change_theme()
+                assert read_state()['language'] == language
+                assert app.scope_button.cget('text') == app.scope_label() + ' ▾'
+                app.menu()
+                pump()
+                popup = app._popup
+                assert popup.winfo_exists(), 'Menu must remain available after posting'
+                popup.unpost()
+                app.scope_menu()
+                pump()
+                assert app._popup.winfo_exists()
+                app._popup.unpost()
+                app.scope.set('last')
+                app.render()
+                assert app.current_metrics()['input'] == 2**60
+                app.snapshot['error'] = '会话文件暂时不可读；显示的是上次记录'
+                app.render()
+                assert app.status.cget('text') == app.t(app.snapshot['error'])
+                assert ('previous usage' in app.status.cget('text')) == (language == 'en')
+                app.snapshot.pop('error')
+                app.scope.set('total')
+            for language, scaling in ((lang, scale) for lang in ('en', 'zh-CN') for scale in (1.0, 1.5, 2.0)):
+                app.language.set(language)
                 root.tk.call('tk','scaling',scaling)
                 for theme in THEMES:
                     app.theme.set(theme)
                     app.change_theme()
                     root.geometry('700x260')
                     pump()
+                    for widget in app.scope_button.master.winfo_children():
+                        assert widget.winfo_width() >= widget.winfo_reqwidth(), 'Header text clipped'
                     for value in app.values:
                         assert value.winfo_reqwidth() <= value.winfo_width(), 'Metric text clipped'
                         assert value.winfo_rooty()+value.winfo_height() <= root.winfo_rooty()+root.winfo_height()
@@ -66,12 +94,20 @@ def run():
             assert desktop_window_count([os.getpid()]) == 0, 'No desktop window must count as closed'
             root.deiconify()
             pump()
-            print('UI PASS: both themes, long title, huge counts, 3 font scales, singleton picker, exact copy')
+            print('UI PASS: English/Chinese switching and persistence, both themes, long title, huge counts, 3 font scales, singleton picker, exact copy')
         finally:
             root.clipboard_clear()
             root.clipboard_append(clipboard_before)
             app.close()
             app.collector.thread.join(2)
+        # A new process-equivalent UI reads the saved language, not the default.
+        second_root = tk.Tk()
+        second = Meter(second_root)
+        try:
+            assert second.language.get() == 'zh-CN'
+        finally:
+            second.close()
+            second.collector.thread.join(2)
 
 
 if __name__=='__main__':

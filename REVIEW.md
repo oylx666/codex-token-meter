@@ -38,3 +38,10 @@ UI smoke checks pass for both light and dark themes and Tk font scales 1.0, 1.5,
 - Source distribution requires Python 3.9+ with Tkinter. A fresh-machine binary installer and signing are not part of this release.
 - Named mutexes are session-local. Simultaneous Windows logins for the same user are not supported as a single shared UI session.
 - The UI is newly restyled and geometry-tested. Final screenshot-based review of the updated window was unavailable after computer-use tooling stopped during this run.
+
+## v0.3.0 — 2026-10-22
+
+- Added English (default) and Simplified Chinese UI language selection with persisted preferences and matching user guides. Existing preferences without a language migrate to English.
+- Kept metric scope IDs independent of translated labels; preserved task titles and exact numeric clipboard output. Parser errors are translated at the presentation boundary.
+- Local validation: 30 unit tests; Tk smoke covering both languages, both themes, 3 font scales, language persistence/reload, stale-data translation, header/metric clipping, task picker, copy, and minimized/hidden window behavior. No screenshot-based visual review was performed.
+- Native file dialog controls follow Windows settings. This remains an external Windows companion, dependent on Codex local log formats and process detection, not a native status-bar API.
