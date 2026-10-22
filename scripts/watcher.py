@@ -87,22 +87,31 @@ class Lifecycle:
         self.present = False
         self.absent_checks = 0
         self.previous_auto_open = False
+        self.previous_auto_close = False
+        self.close_pending = False
 
     def update(self, present, auto_open=True, auto_close=True):
         enabled_now = auto_open and not self.previous_auto_open
+        close_enabled_now = auto_close and not self.previous_auto_close
         self.previous_auto_open = auto_open
+        self.previous_auto_close = auto_close
+        if close_enabled_now:
+            self.close_pending = True
         if present:
             self.absent_checks = 0
+            self.close_pending = True
             if not self.present:
                 self.present = True
                 return 'start' if auto_open else None
             if enabled_now:
                 return 'start'
-        elif self.present:
+        else:
             self.absent_checks += 1
             if self.absent_checks >= 2:
                 self.present = False
-                return 'stop' if auto_close else None
+                if auto_close and self.close_pending:
+                    self.close_pending = False
+                    return 'stop'
         return None
 
 
@@ -120,10 +129,11 @@ def main():
     instance_mutex = acquire('watcher')
     if instance_mutex is None:
         return
-    (STATE_DIR / 'watcher.pid').write_text(str(os.getpid()), encoding='ascii')
     lifecycle = Lifecycle()
     windowless = Path(sys.executable).with_name('pythonw.exe')
     stop_at_start = marker('stop-watcher')
+    # Publish readiness only after initializing the shutdown baseline.
+    (STATE_DIR / 'watcher.pid').write_text(str(os.getpid()), encoding='ascii')
     while True:
         stop_stamp = marker('stop-watcher')
         if stop_stamp and stop_stamp != stop_at_start:
@@ -139,6 +149,8 @@ def main():
         except Exception as exc:
             if action == 'start':
                 lifecycle.present = False  # Retry a failed launch on the next poll.
+            elif action == 'stop':
+                lifecycle.close_pending = True
             try:
                 (STATE_DIR / 'watcher-error.txt').write_text(type(exc).__name__ + ': ' + str(exc), encoding='utf-8')
             except OSError:

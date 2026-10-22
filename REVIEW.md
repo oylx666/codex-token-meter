@@ -1,4 +1,16 @@
-# Reliability review — 0.2.0
+# Reliability review
+
+## 0.2.2 — 2026-10-22
+
+- Fixed lifecycle reconciliation when automatic closing is enabled after Codex already closed. An orphan meter is also closed after the startup debounce; minimizing remains a present window.
+- Fixed upgrades leaving old code running: the installer requests a graceful restart and checks the new watcher's startup acknowledgment. A 10-second shutdown timeout is an explicit failure.
+- Repeated-install testing uncovered a startup/shutdown race. The shutdown controller now repeats notifications while leases exist; watcher readiness is published after its shutdown baseline is initialized.
+- Shared runtime discovery continues to the next Python candidate after a failed candidate instead of aborting on PowerShell native-command errors.
+- Added paired Chinese and English README files and corrected the now-public repository's installation instructions.
+- Validation: 27 local automated tests passed; theme/scale UI smoke checks passed; two consecutive installations completed successfully after the race fix. An earlier legacy pair did not respond to notifications and required a targeted restart of only the verified Token Meter processes. Normal upgrades do not force-kill processes.
+- This is scoped regression evidence, not a claim that all possible defects are eliminated or that a signed, dependency-free installer exists.
+
+## 0.2.0 review
 
 ## Fixed
 

@@ -20,3 +20,14 @@ def acquire(role):
         return None
     # The OS closes this handle on process exit. Do not wrap it in a temporary object.
     return handle
+
+
+def is_running(role):
+    """Probe and immediately release a mutex we created; never trust stale PIDs."""
+    handle = acquire(role)
+    if handle is None:
+        return True
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle(handle)
+    return False

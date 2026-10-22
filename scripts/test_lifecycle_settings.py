@@ -7,6 +7,27 @@ from watcher import Lifecycle
 
 
 class SettingsTests(unittest.TestCase):
+    def test_enable_close_after_codex_is_already_closed(self):
+        life=Lifecycle()
+        life.update(True,auto_close=False)
+        life.update(False,auto_close=False)
+        self.assertIsNone(life.update(False,auto_close=False))
+        self.assertEqual(life.update(False,auto_close=True),'stop')
+        self.assertIsNone(life.update(False,auto_close=True))
+
+    def test_orphan_window_on_watcher_start(self):
+        life=Lifecycle()
+        self.assertIsNone(life.update(False))
+        self.assertEqual(life.update(False),'stop')
+        self.assertIsNone(life.update(False))
+
+    def test_minimize_present_and_transient_absence(self):
+        life=Lifecycle()
+        life.update(True)
+        self.assertIsNone(life.update(False))
+        self.assertIsNone(life.update(True))
+        self.assertIsNone(life.update(True))
+
     def test_all_switch_combinations(self):
         for auto_open in (False,True):
             for auto_close in (False,True):
