@@ -85,7 +85,5 @@ UI smoke checks need a desktop session and use synthetic records in a temporary 
 
 - No window: run `python scripts/watcher.py --probe`, check that `desktop_windows` is above zero and `auto_open` is true, and verify that Windows startup is enabled.
 - Settings seem ineffective: ensure the watcher is running; rerun `Install.cmd` for a controlled restart.
-- No usage: a new session may not have written a usage event yet. A dash does not mean zero consumption.
-- A Codex update is no longer detected: desktop process paths or internal data formats may have changed. Report versions and the error description, **not** `auth.json` or real session files.
 
 Only Windows desktop sessions are supported. Parallel parent sessions can switch the automatic selection; pin one if necessary. Remote/cloud tasks, billing equivalence, and maintenance-free compatibility with future Codex releases are not guaranteed. This release still requires Python and does not provide a signed, runtime-bundled EXE installer. See [REVIEW.md](REVIEW.md) for the review record and remaining verification limits.
