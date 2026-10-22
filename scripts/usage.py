@@ -20,6 +20,7 @@ def metrics(value):
 class UsageReader:
     CHUNK = 1024 * 1024
     MAX_LINE = 4 * 1024 * 1024
+    PROBE = 4096
 
     def __init__(self, path):
         self.path = Path(path)
@@ -36,6 +37,7 @@ class UsageReader:
         self.io_error = None
         self.discard = False
         self.anchor = b''
+        self.prefix = b''
         self.last_stat = None
 
     def consume(self, line):
@@ -69,11 +71,13 @@ class UsageReader:
             with self.path.open('rb') as stream:
                 stat = os.fstat(stream.fileno())
                 identity = (stat.st_dev, stat.st_ino)
-                changed = self.last_stat != (stat.st_size, stat.st_mtime_ns)
                 rewrite = False
-                if self.offset and changed:
+                if self.offset:
+                    # Windows can retain the same mtime for rapid rewrites. Check
+                    # bounded content probes even when the stat tuple is equal.
+                    rewrite = stream.read(len(self.prefix)) != self.prefix
                     stream.seek(max(0, self.offset - len(self.anchor)))
-                    rewrite = stream.read(len(self.anchor)) != self.anchor
+                    rewrite |= stream.read(len(self.anchor)) != self.anchor
                     rewrite |= bool(stat.st_size == self.offset and self.last_stat and stat.st_mtime_ns != self.last_stat[1])
                 if self.identity != identity or stat.st_size < self.offset or rewrite:
                     self.reset()
@@ -81,8 +85,10 @@ class UsageReader:
                 stream.seek(self.offset)
                 data = stream.read(self.CHUNK)
                 self.offset = stream.tell()
-                stream.seek(max(0, self.offset - 64))
-                self.anchor = stream.read(min(64, self.offset))
+                stream.seek(0)
+                self.prefix = stream.read(min(self.PROBE, self.offset))
+                stream.seek(max(0, self.offset - self.PROBE))
+                self.anchor = stream.read(min(self.PROBE, self.offset))
                 self.last_stat = (stat.st_size, stat.st_mtime_ns)
             self.io_error = None
             if self.discard:

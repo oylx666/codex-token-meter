@@ -54,6 +54,25 @@ class ParserExtremes(unittest.TestCase):
         reader.poll()
         self.assertEqual(reader.info['total_token_usage']['input_tokens'],900)
 
+    def test_rewrite_with_identical_stat(self):
+        # Exercise both probes; pad so they cannot overlap.
+        for at_start in (True, False):
+            with self.subTest(at_start=at_start):
+                padding = b'{}\n' * 4000
+                old = event(100, 60)
+                new = event(900, 60)
+                reader = self.load(old + padding if at_start else padding + old)
+                before = self.path.stat()
+                self.path.write_bytes(new + padding if at_start else padding + new)
+                os.utime(self.path, ns=(before.st_atime_ns, before.st_mtime_ns))
+                self.assertEqual(self.path.stat().st_size, before.st_size)
+                self.assertEqual(self.path.stat().st_mtime_ns, before.st_mtime_ns)
+                reader.poll()
+                self.assertEqual(reader.info['total_token_usage']['input_tokens'], 900)
+                # An unchanged poll must not reset or duplicate the snapshot.
+                reader.poll()
+                self.assertEqual(reader.info['total_token_usage']['input_tokens'], 900)
+
     def test_truncate_regrow(self):
         reader = self.load(event())
         self.path.write_bytes(event(900,0) + b'{}\n'*100)

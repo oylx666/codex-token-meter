@@ -45,3 +45,10 @@ UI smoke checks pass for both light and dark themes and Tk font scales 1.0, 1.5,
 - Kept metric scope IDs independent of translated labels; preserved task titles and exact numeric clipboard output. Parser errors are translated at the presentation boundary.
 - Local validation: 30 unit tests; Tk smoke covering both languages, both themes, 3 font scales, language persistence/reload, stale-data translation, header/metric clipping, task picker, copy, and minimized/hidden window behavior. No screenshot-based visual review was performed.
 - Native file dialog controls follow Windows settings. This remains an external Windows companion, dependent on Codex local log formats and process detection, not a native status-bar API.
+
+## v0.3.1 — 2026-10-22
+
+- Diagnosed Windows CI's intermittent `test_same_length_rewrite` failure: a same-size overwrite can retain the observed modification timestamp, so the stat-gated content check skipped the replacement. This could leave real displayed usage stale.
+- Always compare bounded 4 KiB prefix/tail probes against the previously consumed bytes, independently of mtime. Keep incremental reads, file-identity checks, truncate recovery, and changed-mtime same-size resets. Idle reads add at most 8 KiB of probe data per poll; large histories are not reread every half-second.
+- Added deterministic regression coverage for same-size, identical-mtime rewrites at both ends of a file whose probes do not overlap, followed by an unchanged poll. Local: 31 unit tests, compileall, and bilingual Tk UI smoke pass.
+- Boundary: an arbitrary in-place edit confined to the unsampled middle of a large file with preserved identity, size, and timestamp is outside this append-log reader's detection contract.
