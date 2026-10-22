@@ -10,7 +10,7 @@ def main():
     version=json.loads((root/'.codex-plugin/plugin.json').read_text(encoding='utf-8'))['version'].split('+')[0]
     files=[p for p in root.iterdir() if p.suffix in ('.md','.ps1','.cmd')]
     files += list((root/'scripts').glob('*.py'))
-    files += [root/'.codex-plugin/plugin.json',root/'.gitignore',root/'.gitattributes']
+    files += [root/'LICENSE',root/'.codex-plugin/plugin.json',root/'.gitignore',root/'.gitattributes']
     target=root/'dist'/f'codex-token-meter-{version}-windows-source.zip'
     target.parent.mkdir(exist_ok=True)
     with zipfile.ZipFile(target,'w',compression=zipfile.ZIP_DEFLATED) as archive:
